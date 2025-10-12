@@ -5,7 +5,7 @@
  */
 export function invertObj(obj) {
     if(!obj) return
-    if(Object.keys(obj).length === 0) return {}
+    if(!Object.keys(obj).length) return {}
     
     const newObj = {}
 
