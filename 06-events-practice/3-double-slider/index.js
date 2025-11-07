@@ -169,7 +169,5 @@ export default class DoubleSlider {
 
     document.removeEventListener('pointermove', this.onThumbPointerMove)
     document.removeEventListener('pointerup', this.onThumbPointerUp)
-
-    this.subElements = {}
   }
 }

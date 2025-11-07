@@ -119,7 +119,7 @@ describe('events-practice/sortable-table-v2', () => {
     const firstRow = body.firstElementChild;
     const lastRow = body.lastElementChild;
 
-    //expect(firstRow).toHaveTextContent('53'); ???
+    expect(firstRow).toHaveTextContent('53');
     expect(lastRow).toHaveTextContent('3');
   });
 

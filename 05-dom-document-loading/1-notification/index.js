@@ -43,21 +43,21 @@ export default class NotificationMessage {
     parent.append(this.element)
 
     this.timerId = setTimeout(() => {
-      this.remove()
+      this.destroy()
     }, this.duration)
   }
 
   remove() {
     this.element && this.element.remove()
-    this.timerId && clearTimeout(this.timerId)
   }
 
   destroy() {
     this.remove()
-    this.notification = null
+
+    this.timerId && clearTimeout(this.timerId)
 
     if (NotificationMessage.activeNotification === this) {
-      NotificationMessage.activeNotification = false
+      NotificationMessage.activeNotification = null
     }
   }
 }

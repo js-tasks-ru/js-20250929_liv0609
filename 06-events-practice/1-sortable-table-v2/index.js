@@ -30,7 +30,7 @@ export default class SortableTable {
     return `
       <div class="sortable-table__cell" data-id="${column.id}" data-sortable="${column.sortable}" data-order="${order}">
         <span>${column.title}</span>
-        ${column.sortable ? this.getSortArrow() : ''}
+        ${column.sortable && this.sorted.id === column.id ? this.getSortArrow() : ''}
       </div>
     `
   }
@@ -109,7 +109,7 @@ export default class SortableTable {
     if (!column) return
 
     const { id, order } = column.dataset
-    const newOrder = order === 'asc' ? 'desc' : 'asc'
+    const newOrder = order === 'desc' ? 'asc' : 'desc'
 
     this.sort(id, newOrder)
   }
@@ -170,10 +170,25 @@ export default class SortableTable {
   }
 
   updateTableHeader() {
-    const headerCells = this.headerConfig.map(column => this.getHeaderCell(column)).join('')
-    this.subElements.header.innerHTML = headerCells
+    const currentActiveCell = this.subElements.header.querySelector('[data-order]')
+    if (currentActiveCell) {
+      currentActiveCell.removeAttribute('data-order')
+      const existingArrow = currentActiveCell.querySelector('[data-element="arrow"]')
+      if (existingArrow) {
+        existingArrow.remove()
+      }
+    }
 
-    this.subElements.header = this.element.querySelector('[data-element="header"]')
+    const newActiveCell = this.subElements.header.querySelector(`[data-id="${this.sorted.id}"]`)
+    if (newActiveCell) {
+      newActiveCell.dataset.order = this.sorted.order
+      newActiveCell.insertAdjacentHTML('beforeend', this.getSortArrow())
+    }
+
+    // const headerCells = this.headerConfig.map(column => this.getHeaderCell(column)).join('')
+    // this.subElements.header.innerHTML = headerCells
+
+    // this.subElements.header = this.element.querySelector('[data-element="header"]')
   }
 
   updateTableBody(data) {
@@ -186,7 +201,5 @@ export default class SortableTable {
 
   destroy() {
     this.remove()
-    this.element = null
-    this.subElements = {}
   }
 }

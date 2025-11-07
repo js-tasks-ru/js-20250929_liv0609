@@ -1,5 +1,6 @@
 class Tooltip {
   static instance
+  static offset = 10
 
   constructor() {
     if (Tooltip.instance) {
@@ -28,7 +29,7 @@ class Tooltip {
 
   handlePointerOver = (event) => {
     const target = event.target.closest('[data-tooltip]')
-    
+
     if (target) {
       this.render(target.dataset.tooltip)
     }
@@ -42,7 +43,7 @@ class Tooltip {
 
   handlePointerMove = (event) => {
     if (!this.element) return
-    
+
     this.moveTooltip(event)
   }
 
@@ -60,15 +61,13 @@ class Tooltip {
     element.style.position = 'absolute'
     element.style.zIndex = '1000'
     element.style.pointerEvents = 'none'
-    
+
     this.element = element
   }
 
   moveTooltip(event) {
-    const offset = 10
-
-    const x = event.clientX + offset
-    const y = event.clientY + offset
+    const x = event.clientX + this.offset
+    const y = event.clientY + this.offset
 
     this.element.style.left = `${x}px`
     this.element.style.top = `${y}px`
