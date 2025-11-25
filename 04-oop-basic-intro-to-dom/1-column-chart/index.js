@@ -34,7 +34,6 @@ export default class ColumnChart {
 
     destroy() {
         this.remove()
-        this.element = null // можно и не обнулять, сборщик сам разберется
     }
 
     _generateTemplate() {

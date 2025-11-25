@@ -10,7 +10,6 @@ export default class SortableTable {
     this.render()
   }
 
-
   getTableHeader() {
     return `
       <div data-element="header" class="sortable-table__header sortable-table__row">
