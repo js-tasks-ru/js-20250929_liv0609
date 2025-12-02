@@ -8,7 +8,6 @@ class Tooltip {
     }
 
     Tooltip.instance = this
-    this.element = null
   }
 
   initialize() {

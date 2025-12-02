@@ -1,117 +1,36 @@
-export default class SortableTable {
+import BaseSortableTable from '../../05-dom-document-loading/2-sortable-table-v1/index'
+
+export default class SortableTable extends BaseSortableTable {
   element
   subElements = {}
 
-  constructor(headerConfig = [], { data = [], sorted = {}, isSortLocally = true } = {}) {
+  constructor(
+    headerConfig = [],
+    {
+      data = [],
+      sorted = {
+        id: headerConfig.find(item => item.sortable).id,
+        order: 'asc'
+      },
+      isSortLocally = true
+    } = {}
+  ) {
+    super(headerConfig, data)
+    
     this.headerConfig = headerConfig
     this.data = data
     this.sorted = sorted
     this.isSortLocally = isSortLocally
 
     this.render()
-    this.initEventListeners()
-
-    if (this.sorted.id) {
-      this.sort(this.sorted.id, this.sorted.order)
-    }
-  }
-
-  getTableHeader() {
-    return `
-      <div data-element="header" class="sortable-table__header sortable-table__row">
-        ${this.headerConfig.map(column => this.getHeaderCell(column)).join('')}
-      </div>
-    `
-  }
-
-  getHeaderCell(column) {
-    const order = this.sorted.id === column.id ? this.sorted.order : ''
-
-    return `
-      <div class="sortable-table__cell" data-id="${column.id}" data-sortable="${column.sortable}" data-order="${order}">
-        <span>${column.title}</span>
-        ${column.sortable && this.sorted.id === column.id ? this.getSortArrow() : ''}
-      </div>
-    `
-  }
-
-  getSortArrow() {
-    return `
-      <span data-element="arrow" class="sortable-table__sort-arrow">
-        <span class="sort-arrow"></span>
-      </span>
-    `
-  }
-
-  getTableBody() {
-    return `
-      <div data-element="body" class="sortable-table__body">
-        ${this.getTableRows(this.data)}
-      </div>
-    `
-  }
-
-  getTableRows(data = []) {
-    return data.map(item => `
-      <a href="/products/${item.id}" class="sortable-table__row">
-        ${this.getTableRow(item)}
-      </a>
-    `).join('')
-  }
-
-  getTableRow(item) {
-    const cells = this.headerConfig.map(column => {
-      if (column.template) {
-        return column.template(item[column.id])
-      }
-      return `<div class="sortable-table__cell">${item[column.id]}</div>`
-    })
-
-    return cells.join('')
-  }
-
-  getTable() {
-    return `
-      <div class="sortable-table">
-        ${this.getTableHeader()}
-        ${this.getTableBody()}
-      </div>
-    `
   }
 
   render() {
-    const element = document.createElement('div')
-    element.innerHTML = this.getTable()
-
-    this.element = element.firstElementChild
-    this.subElements = this.getSubElements()
-  }
-
-  getSubElements() {
-    const result = {}
-    const elements = this.element.querySelectorAll('[data-element]')
-
-    for (const subElement of elements) {
-      const name = subElement.dataset.element
-      result[name] = subElement
+    super.render()
+    
+    if (this.sorted.id) {
+      this.sort(this.sorted.id, this.sorted.order)
     }
-
-    return result
-  }
-
-  initEventListeners() {
-    this.subElements.header.addEventListener('pointerdown', this.onSortClick)
-  }
-
-  onSortClick = (event) => {
-    const column = event.target.closest('[data-sortable="true"]')
-
-    if (!column) return
-
-    const { id, order } = column.dataset
-    const newOrder = order === 'desc' ? 'asc' : 'desc'
-
-    this.sort(id, newOrder)
   }
 
   sort(field, order) {
@@ -133,73 +52,83 @@ export default class SortableTable {
   }
 
   sortOnServer(field, order) {
-    console.log('Server sorting for:', field, order)
-  }
-
-  isSortable(field) {
-    const column = this.headerConfig.find(item => item.id === field)
-    return column && column.sortable
+    console.log('Server sorting would be implemented here')
   }
 
   sortData(field, order) {
     const column = this.headerConfig.find(item => item.id === field)
-    if (!column || !column.sortable) return this.data
+    
+    if (!column || !column.sortable) {
+      return this.data
+    }
 
     const direction = order === 'asc' ? 1 : -1
-    const sortType = column.sortType || 'string'
+    const data = [...this.data]
 
-    return [...this.data].sort((a, b) => {
-      if (column.sortFunction) {
-        return direction * column.sortFunction(a[field], b[field])
-      }
+    if (column.sortType === 'custom' && column.sortFunction) {
+      return data.sort((a, b) => direction * column.sortFunction(a[field], b[field]))
+    }
 
+    return data.sort((a, b) => {
       const aValue = a[field]
       const bValue = b[field]
 
-      switch (sortType) {
+      switch (column.sortType) {
         case 'number':
           return direction * (aValue - bValue)
         case 'string':
         default:
-          return direction * aValue.localeCompare(bValue, ['ru', 'en'], {
-            caseFirst: 'upper',
-            sensitivity: 'case'
+          return direction * aValue.localeCompare(bValue, ['ru', 'en'], { 
+            caseFirst: 'upper' 
           })
       }
     })
   }
 
   updateTableHeader() {
-    const currentActiveCell = this.subElements.header.querySelector('[data-order]')
-    if (currentActiveCell) {
-      currentActiveCell.removeAttribute('data-order')
-      const existingArrow = currentActiveCell.querySelector('[data-element="arrow"]')
-      if (existingArrow) {
-        existingArrow.remove()
-      }
-    }
-
-    const newActiveCell = this.subElements.header.querySelector(`[data-id="${this.sorted.id}"]`)
-    if (newActiveCell) {
-      newActiveCell.dataset.order = this.sorted.order
-      newActiveCell.insertAdjacentHTML('beforeend', this.getSortArrow())
-    }
-
-    // const headerCells = this.headerConfig.map(column => this.getHeaderCell(column)).join('')
-    // this.subElements.header.innerHTML = headerCells
-
-    // this.subElements.header = this.element.querySelector('[data-element="header"]')
+    const headerCells = this.headerConfig.map(column => this.getHeaderCell(column)).join('')
+    this.subElements.header.innerHTML = headerCells
+    
+    this.subElements.header = this.element.querySelector('[data-element="header"]')
   }
 
-  updateTableBody(data) {
-    this.subElements.body.innerHTML = this.getTableRows(data)
+  getHeaderCell(column) {
+    const order = this.sorted.id === column.id ? this.sorted.order : ''
+    const hasArrow = this.sorted.id === column.id
+
+    return `
+      <div class="sortable-table__cell" data-id="${column.id}" data-sortable="${column.sortable}" data-order="${order}">
+        <span>${column.title}</span>
+        ${column.sortable ? this.getSortArrow(hasArrow) : ''}
+      </div>
+    `
   }
 
-  remove() {
-    this.element && this.element.remove()
+  getSortArrow(show = false) {
+    return show ? `
+      <span data-element="arrow" class="sortable-table__sort-arrow">
+        <span class="sort-arrow"></span>
+      </span>
+    ` : ''
+  }
+
+  initEventListeners() {
+    this.subElements.header.addEventListener('pointerdown', this.onSortClick)
+  }
+
+  onSortClick = (event) => {
+    const column = event.target.closest('[data-sortable="true"]')
+
+    if (!column) return
+
+    const { id, order } = column.dataset
+    const newOrder = order === 'desc' ? 'asc' : 'desc'
+
+    this.sort(id, newOrder)
   }
 
   destroy() {
-    this.remove()
+    super.destroy()
+    this.subElements.header.removeEventListener('pointerdown', this.onSortClick)
   }
 }
